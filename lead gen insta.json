@@ -1,0 +1,315 @@
+{
+  "name": "lead gen insta",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Instagram Lead scapper",
+        "formDescription": "Get all lead from Instagram directly to sheet",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "who are looking for ?"
+            },
+            {
+              "fieldLabel": "Location"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -640,
+        80
+      ],
+      "id": "9ff17b15-dfd7-4e45-9a4b-9fecc3b869b1",
+      "name": "On form submission",
+      "webhookId": "37e0a9cc-bbb0-4bad-8c0c-f5e65a058524"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/apify~google-search-scraper/run-sync-get-dataset-items?token=apify_api_uKsxCAYvrdtaHznLYCslacS8ZnQH1m2HlscS",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"focusOnPaidAds\": false,\n    \"forceExactMatch\": false,\n    \"includeIcons\": false,\n    \"includeUnfilteredResults\": false,\n    \"maxPagesPerQuery\": 1,\n    \"mobileResults\": false,\n    \"queries\": \"site:instagram.com + {{ $json['who are looking for ?'] }}{{ $json.Location }} \",\n    \"resultsPerPage\": 100,\n    \"saveHtml\": false,\n    \"saveHtmlToKeyValueStore\": true\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -360,
+        80
+      ],
+      "id": "37ff1645-aa48-4098-955b-8816f3f8b10f",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -80,
+        80
+      ],
+      "id": "744f2a3e-7102-4e62-aff7-b396dbb93e80",
+      "name": "Wait",
+      "webhookId": "a582b641-54e1-44ed-8e00-5950b59c5860"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Helper function to parse follower counts like \"22.7K\", \"1.2M\", etc.\nconst parseFollowers = (raw) => {\n  if (!raw || typeof raw !== 'string') return null;\n\n  const clean = raw.trim().toUpperCase();\n  const match = clean.match(/([\\d.,]+)\\s*([KMB]?)/);\n\n  if (!match) return null;\n\n  let number = parseFloat(match[1].replace(',', ''));\n  const multiplier = match[2];\n\n  if (isNaN(number)) return null;\n\n  switch (multiplier) {\n    case 'K': return Math.round(number * 1000);\n    case 'M': return Math.round(number * 1000000);\n    case 'B': return Math.round(number * 1000000000);\n    default: return Math.round(number);\n  }\n};\n\n// Main processing\nconst creators = $json[\"organicResults\"];\n\nreturn creators.map((creator) => {\n  const titleSplit = creator.title.split(\"(@\");\n  const name = titleSplit[0]?.trim() || \"Unknown\";\n  const handle = titleSplit[1]?.split(\")\")[0] || \"\";\n\n  const rawFollowers = creator.followersAmount || \"\";\n  const cleanFollowers = parseFollowers(rawFollowers);\n\n  return {\n    json: {\n      Name: name,\n      InstagramHandle: handle,\n      ProfileURL: creator.url || \"\",\n      Description: creator.description || \"\",\n      Followers: cleanFollowers,\n      ChannelName: creator.channelName || \"\",\n      PostType: creator.type || \"\",\n      Position: creator.position || null,\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        80
+      ],
+      "id": "72351c9c-6de7-4493-9f30-4edc7793991c",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appzmdJAHlN7ZB2Pd",
+          "mode": "list",
+          "cachedResultName": "insta lead",
+          "cachedResultUrl": "https://airtable.com/appzmdJAHlN7ZB2Pd"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl8AGo1yBPtlxhpW",
+          "mode": "list",
+          "cachedResultName": "photographer",
+          "cachedResultUrl": "https://airtable.com/appzmdJAHlN7ZB2Pd/tbl8AGo1yBPtlxhpW"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $json.Name }}",
+            "Username": "={{ $json.InstagramHandle }}",
+            "insta url": "={{ $json.ProfileURL }}",
+            "Descripation": "={{ $json.Description }}",
+            "Follower": "={{ $json.Followers }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Username",
+              "displayName": "Username",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "insta url",
+              "displayName": "insta url",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Descripation",
+              "displayName": "Descripation",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Follower",
+              "displayName": "Follower",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        560,
+        80
+      ],
+      "id": "b9ddd7aa-97fb-401b-85f4-8786845979af",
+      "name": "Create a record",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "F2o0mjFi50PXOkOJ",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Who are you looking for ?",
+        "height": 260
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -700,
+        -20
+      ],
+      "id": "8126c362-7b98-4c39-81b6-09aaf456e4fb",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Searching...",
+        "height": 260,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -420,
+        -20
+      ],
+      "id": "c9ae0f85-542c-4b67-8489-e28f85218f81",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Gether Result.",
+        "height": 260,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -140,
+        -20
+      ],
+      "id": "b2f3ee91-0b2c-4002-90ea-2bba9d1f3341",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Structure Output\n",
+        "height": 260,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        160,
+        -20
+      ],
+      "id": "c39513b0-d2fa-4f24-870c-56a90c7729b3",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Store Result\n",
+        "height": 260,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        500,
+        -20
+      ],
+      "id": "6cb74bd4-314d-43d4-9a60-ef31f0b72887",
+      "name": "Sticky Note4"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Create a record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a record": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "9c1cd208-c527-43dd-afe7-9884bae207aa",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3504356206c80cb034e83be82fc838d155af02b84cdadce96b3128d18ba592bc"
+  },
+  "id": "77c1ENz37Al2DVdl",
+  "tags": []
+}
