@@ -30,7 +30,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.apify.com/v2/acts/apify~google-search-scraper/run-sync-get-dataset-items?token=apify_api_uKsxCAYvrdtaHznLYCslacS8ZnQH1m2HlscS",
+        "url": "enter your aplify API Key",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n    \"focusOnPaidAds\": false,\n    \"forceExactMatch\": false,\n    \"includeIcons\": false,\n    \"includeUnfilteredResults\": false,\n    \"maxPagesPerQuery\": 1,\n    \"mobileResults\": false,\n    \"queries\": \"site:instagram.com + {{ $json['who are looking for ?'] }}{{ $json.Location }} \",\n    \"resultsPerPage\": 100,\n    \"saveHtml\": false,\n    \"saveHtmlToKeyValueStore\": true\n} ",
